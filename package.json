@@ -16,7 +16,7 @@
   },
   "scripts": {
     "tsc": "tsc -w",
-    "start": "concurrently \"npm run tsc\" \"npm run watch\" ",
+    "start": "concurrently --kill-others \"npm run tsc\" \"npm run watch\" ",
     "watch": "nodemon run.js"
   },
   "keywords": [],
