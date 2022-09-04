@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const solution = require('./solution');
 const INPUT_PATH = path.resolve(__dirname, './input.json');
-const OUTPUT_PATH = path.resolve(__dirname, './output.html');
+const OUTPUT_PATH = path.resolve(__dirname, './index.html');
 const json = JSON.parse(fs.readFileSync(INPUT_PATH, { encoding: 'utf-8' }));
 const html = `
     <!DOCTYPE html>
