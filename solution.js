@@ -19,12 +19,13 @@ function reducer(node) {
             return createElement({ elementType: 'div', content: (_e = node.characters) !== null && _e !== void 0 ? _e : '', className: node.name.toLowerCase() });
     }
 }
+// Парсер
 // const st = new Set()
 // function parse (node: Node): void {
-//   st.add(node.characters)
+//   st.add(node.style)
 //   if ((typeof node.children !== 'undefined') && node.children?.length > 0) {
 //     for (const child of node.children) {
-//       st.add(child.characters)
+//       st.add(child.style)
 //       parse(child)
 //     }
 //   }

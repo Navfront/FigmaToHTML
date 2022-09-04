@@ -11,6 +11,7 @@ const html = `
     <html lang="en">
     <head>
         <meta charset="UTF-8" />
+        <title>FIGMA to HTML</title>
     </head>
     <body style="padding: 0; margin: 0;">
         ${solution(json)}
