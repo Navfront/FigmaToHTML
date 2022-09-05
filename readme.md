@@ -10,6 +10,9 @@
 
 ## Задача:
 
+<img src="./JSON.jpg" width=300 height=250 alt="json" style="object-fit: cover"> =>
+<img src="./Main.jpg" width=300 height=250 alt="html" style="object-fit: cover">
+
 Нужно написать функцию, которая преобразует этот файл в HTML, а затем вернет HTML в виде строки. При тестировании эта строка будет подставлена внутрь тега body. 
 
 Описание функции и параметров дано на Typescript, но функцию требуется написать на JS.
