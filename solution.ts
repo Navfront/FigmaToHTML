@@ -40,14 +40,14 @@ type Effects = DropShadowEffect[]
 
 interface Constraints {
   vertical: 'TOP' | 'BOTTOM' | 'SCALE'
-  horizontal: 'LEFT' | 'CENTER' | 'RIGHT'
+  horizontal: 'LEFT' | 'CENTER' | 'RIGHT' | 'SCALE'
 }
 
 interface Node {
   id: string
   name: string
   type: NodeType
-  children: Node[] | undefined
+  children: Node[]
   backgroundColor?: Color
   characters?: string | undefined
   style?: Style | undefined
@@ -106,6 +106,10 @@ type NodeType =
     'COMPONENT'
 
 function normalizeColor (color: Color): string {
+  if (typeof color === 'undefined') {
+    return 'red'
+  }
+  if (typeof color?.r === 'undefined' || typeof color?.g === 'undefined' || typeof color?.g === 'undefined') { return 'red' }
   return `rgb(${String(Math.round(color.r * 255))},${String(Math.round(color.g * 255))},${String(Math.round(color.b * 255))});`
 }
 
@@ -115,7 +119,7 @@ function getStyles (node: Node): string {
   ${node.layoutAlign === 'STRETCH' ? 'align-self:stretch;' : ''}
   ${node.layoutGrow === 0 ? 'flex-grow: 0;' : ''}
   ${typeof node.itemSpacing === 'number' ? 'gap:'.concat(String(node.itemSpacing), 'px;') : ''}
-  ${(node.backgroundColor != null) ? 'color:'.concat(normalizeColor(node.backgroundColor)) : ''}
+
   ${node.primaryAxisAlignItems === 'SPACE_BETWEEN' ? 'justify-content: space-between;' : ''}
   ${node.counterAxisAlignItems === 'CENTER' ? 'align-items: center;' : ''}
   ${node.primaryAxisAlignItems === 'CENTER' ? 'justify-content: center;' : ''}
@@ -128,8 +132,12 @@ function getStyles (node: Node): string {
   ${typeof node.style?.fontSize === 'number' ? 'font-size:'.concat(String(node.style.fontSize), 'px;') : ''}
   ${typeof node.style?.textAlignHorizontal === 'string' ? 'text-align:'.concat(node.style.textAlignHorizontal.toLowerCase(), ';') : ''}
   ${typeof node.style?.lineHeightPercent === 'number' ? 'line-height:'.concat(String(node.style.lineHeightPercent), '%;') : ''}
-  ${(node.background != null) && node.background?.length > 0 ? 'background-color:'.concat(normalizeColor(node.background[0].color)) : ''}
-
+  ${(node.absoluteBoundingBox != null) ? 'width:'.concat(String(node.absoluteBoundingBox.width), 'px;') : ''}
+  ${(node.absoluteBoundingBox != null) && node.type === 'RECTANGLE' ? 'height:'.concat(String(node.absoluteBoundingBox.height), 'px;') : ''}
+  ${(node.name.toLowerCase() === 'main' || node.name.toLowerCase() === 'navbar' || node.name.toLowerCase() === 'content' || node.name.toLowerCase() === 'section' ? 'margin: 0 auto;' : '')}
+  ${(node.name.toLowerCase() === 'image' && (node.fills != null) && node.fills?.length > 0 ? 'background-color:'.concat(normalizeColor(node?.fills[0].color), ';') : '')}
+  ${(node.type === 'TEXT' && (node.fills != null) && node.fills?.length > 0 ? 'color:'.concat(normalizeColor(node?.fills[0].color), ';') : '')}
+ ${(node.effects != null && node.effects.length > 0 && node.effects[0].type === 'DROP_SHADOW') ? 'box-shadow: 0px 1px 0px #000000;' : ''}
   `
 }
 
@@ -137,30 +145,48 @@ function createElement ({ elementType, content, className, styles }: CreateEleme
   return `<${elementType} class="${className ?? ''}" style="${styles ?? ''}">${content}</${elementType}>`
 }
 
+function createInstance (node: Node): string {
+  if (node.name.toLowerCase() === 'button') {
+    return `<button type="button" class="${node.name.toLowerCase()}" style="${getStyles(node)} padding-left:0; padding-right:0; cursor:pointer; background:${(node.background != null) && node.background.length > 0 ? normalizeColor(node.background[0].color) : 'transparent'};">${node.characters ?? ''}</button>`
+  }
+  return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
+}
+
+function createRectangle (node: Node): string {
+  if (node.name.toLowerCase() === 'image') {
+    return `<div class="${node.name.toLowerCase()}" style="${getStyles(node)}">${node.characters ?? ''}</div>`
+  }
+  return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
+}
+
 function reducer (node: Node): string {
   switch (node.type) {
-    case 'DOCUMENT':
-      return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
     case 'COMPONENT':
       return ''
-    case 'CANVAS':
-      return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
     case 'FRAME':
       return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
     case 'TEXT':
       return createElement({ elementType: 'span', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
+    case 'RECTANGLE':
+      return createRectangle(node)
+    case 'INSTANCE':
+      return createInstance(node)
     default:
-      return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
+      if (typeof node.children[0] !== 'undefined') {
+        return reducer(node.children[0])
+      } else {
+        return createElement({ elementType: 'div', content: node.characters ?? '', className: node.name.toLowerCase(), styles: getStyles(node) })
+      }
   }
 }
 
 // Парсер
 // const st = new Set()
 // function parse (node: Node): void {
-//   st.add(node.style)
+//   st.add(node.type)
 //   if ((typeof node.children !== 'undefined') && node.children?.length > 0) {
 //     for (const child of node.children) {
-//       st.add(child.style)
+//       st.add(child.type)
 //       parse(child)
 //     }
 //   }
@@ -179,6 +205,9 @@ function traverse (node: Node): string {
 }
 
 function build (json: Json): string {
+  // parse(json.document)
+  // console.log(st)
+
   const result = traverse(json.document)
   return result
 }
